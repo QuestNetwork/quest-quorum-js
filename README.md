@@ -11,7 +11,7 @@ The Quorum Core module for the [Quest Network Operating System](https://github.c
 
 [Quest OS](https://github.com/QuestNetwork/quest-os-js) which makes use of the [Interplanetary Filesystem](https://ipfs.io), [IPFS GossipSub](https://blog.ipfs.io/2020-05-20-gossipsub-v1.1/) and [IPFS DAGs](https://docs.ipfs.io/concepts/merkle-dag/).
 
-Synchronizes time and data resiliantly between peers. Uses elliptic curve cryptography in [Quest Dolphin JS](https://github.com/QuestNetwork/quest-dolphin-js). 
+Synchronizes time and data resiliantly between peers. Uses elliptic curve cryptography in [Quest PubSub JS](https://github.com/QuestNetwork/quest-pubsub-js). 
 
 ## License
 
