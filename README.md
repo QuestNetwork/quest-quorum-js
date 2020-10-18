@@ -1,4 +1,4 @@
-# Quest Quorum Core JS
+# Quest Quorum JS
 > Core Module for the Quest Network Quorum Consensus. 
 
 ## Lead Maintainer
