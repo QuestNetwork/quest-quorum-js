@@ -1,11 +1,11 @@
 {
-  "name": "@questnetwork/quest-quest-js",
+  "name": "@questnetwork/quest-quorum-js",
   "version": "0.9.5",
   "license": "AGPL-3.0",
   "author": "StationedInTheField",
   "repository": {
     "type": "git",
-    "url": "https://github.com/QuestNetwork/quest-social-js.git"
+    "url": "https://github.com/QuestNetwork/quest-quorum-js.git"
   },
   "main": "quorum.js",
   "engines": {
