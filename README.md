@@ -18,7 +18,7 @@ When a peer quorum is used, Quest Quorum votes on a current time when assemblies
 **Default Consensus:**
 In a valid assembly at least 71% of peers have to return the same result for the response to be accepted.
 
-**Add-Ons**
+**Add-Ons:**
 You can write add-ons for Quest Quorum that responses are piped through. There is an official [Quest Quorum Favorites](https://github.com/QuestNetwork/quest-quorum-fav-js) consensus scheme that is used by [qD Social](https://github.com/QuestNetwork/qd-social-ts) and [qD Messages](https://github.com/QuestNetwork/qd-messages-ts).
 
 # Roadmap
