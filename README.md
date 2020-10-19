@@ -21,6 +21,11 @@ In a valid assembly at least 71% of peers have to return the same result for the
 **Add-Ons**
 You can write add-ons for Quest Quorum that responses are piped through. There is an official [Quest Quorum Favorites](https://github.com/QuestNetwork/quest-quorum-fav-js) consensus scheme that is used by [qD Social](https://github.com/QuestNetwork/qd-social-ts) and [qD Messages](https://github.com/QuestNetwork/qd-messages-ts).
 
+# Roadmap
+
+**0.9.5**
+- Basic functionality
+
 ## License
 
 GNU AGPLv3
