@@ -90,9 +90,22 @@ export class AssemblyManager {
     broadcastCreate(channel,path){
       return new Promise( (resolve) => {
 
+        if(typeof this.timeAssembly[channel] == 'undefined'){
+          this.timeAssembly[channel] = {};
+        }
+
+        if(typeof this.timeAssembly[channel][path] == 'undefined'){
+          this.timeAssembly[channel][path] = {}
+        }
+
       if(typeof this.timeAssembly[channel][path]['requests'] == 'undefined'){
         this.timeAssembly[channel][path]['requests'] = [];
       }
+
+
+            if(typeof this.timeAssembly[channel][path]['resolved'] == 'undefined'){
+              this.timeAssembly[channel][path]['resolved'] = [];
+            }
 
       let broadcastLock = false;
 
@@ -113,15 +126,17 @@ export class AssemblyManager {
             let timeQuorumResolved = false;
             for(let e of this.timeAssembly[channel][path]['requests']){
               //compare times and group different times
-              if(timeQuorumResolved){
-                this.timeAssembly[channel][path]['resolved'].push(e);
-                this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_ACCEPTED" })
-                timeQuorumResolved = true;
-                setTimeout( () => {
-                  this.podSub[channel][path].unsubscribe();
-                },5000);
-                resolve(this.timeAssembly[channel][path]['resolved']);
-              }
+
+            }
+
+            if(timeQuorumResolved){
+              this.timeAssembly[channel][path]['resolved'].push(e);
+              this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_ACCEPTED", time: acceptedTime })
+              timeQuorumResolved = true;
+              setTimeout( () => {
+                this.podSub[channel][path].unsubscribe();
+              },5000);
+              resolve(this.timeAssembly[channel][path]['resolved']);
             }
         }
       });
@@ -129,7 +144,7 @@ export class AssemblyManager {
       this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_CREATE" })
 
       setTimeout( () => {
-        resolve('abort');
+        resolve([]);
       },120000);
     });
   }
@@ -137,40 +152,78 @@ export class AssemblyManager {
 
 //TODO::::
     async publishAsk(assembly, time){
-      //resolve channels from path
-      let channels = this.resolveChannelsFromPath(path);
-
-      for(let channel of channels){
-        //listen for QUORUM_ASSEMBLY_RESPONSE on our path and only pick results from peers in the timequorum
-        //add valid results to this.quorumResults[path] for path
-
-        this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_ASK", message: time })
-        //ask the peers for the relevant piece of information
-      }
-
-    }
-
-    async response(path,object){
-      let channels = this.resolveChannelsFromPath(path);
-
-      for(let channel of channels){
-        //listen on the result and only pick results from peers in the timequorum
-        //add valid results to this.quorumResults[path] for path
-
-        this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_RESPONSE", message: object })
-        //ask the peers for the relevant piece of information
-      }
-    }
 
 
-    async join(time, path, toChPubKey){
-      // SEND QUORUM_ASSEMBLY_JOIN
-    }
+      return new Promise( (resolve) => {
 
 
-    async addPeer(time, path, chPubKey){
-      //add time, path and chPubKey to results
-    }
+
+            if(typeof this.participants[channel] == 'undefined'){
+              this.responseAssembly[channel] = {};
+            }
+
+
+            if(typeof this.participants[channel][path] == 'undefined'){
+              this.responseAssembly[channel][path] = {}
+            }
+
+            if(typeof this.participants[channel][path] == 'undefined'){
+              this.responseAssembly[channel][path]['requests'] = [];
+            }
+
+            if(typeof this.participants[channel][path] == 'undefined'){
+              this.responseAssembly[channel][path]['resolved'] = [];
+            }
+
+
+            if(typeof  this.podAskSub[channel] == 'undefined'){
+              this.podAskSub[channel] = {};
+            }
+            let broadcastLock = false;
+            this.podAskSub[channel][path] = this.dolphin.pod.listen(channel).subscribe( (message) => {
+
+              if(message['type'] == 'QUORUM_ASSEMBLY_RESPONSE' && toChannelPubKey == this.channel.getChannelPubKey(channel)  && this.timeAssembly[channel][path]['requests'].length < (this.dolphin.getOnlineParticipants(channel.length/4*3)){
+               this.responseAssembly[channel][path]['requests'].push(message);
+              }
+              else if(!broadcastLock && message['type'] == 'QUORUM_ASSEMBLY_RESPONSE' && toChannelPubKey == this.channel.getChannelPubKey(channel) ){
+                broadcastLock = true;
+                this.responseAssembly[channel][path]['requests'].push(message);
+                  //we know the data now?
+                  let quorumResolved = false;
+                  for(let e of this.timeAssembly[channel][path]['requests']){
+                    //compare data and group different data
+                  }
+
+                  if(quorumResolved){
+                    this.responseAssembly[channel][path]['resolved'].push(e);
+                    this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_ACCEPTED", time: acceptedTime })
+                    timeQuorumResolved = true;
+                    setTimeout( () => {
+                      this.podAskSub[channel][path].unsubscribe();
+                    },5000);
+                    resolve(this.responseAssembly[channel][path]['resolved']);
+                  }
+              }
+            });
+
+            this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_ASK", message: time })
+
+            setTimeout( () => {
+              resolve([]);
+            },120000);
+      });
+
+
+  }
+
+    // async response(path,object){
+      // QUORUM_ASSEMBLY_RESPONSE IMPLEMENTED IN PUBSUB
+    // }
+
+
+    // async join(time, path, toChPubKey){
+      // QUORUM_ASSEMBLY_JOIN IMPLEMENTED IN PUBSUB
+    // }
 
 
 
