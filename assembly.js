@@ -106,6 +106,8 @@ export class AssemblyManager {
          this.timeAssembly[channel][path]['requests'].push(message);
         }
         else if(!broadcastLock && message['type'] == 'QUORUM_ASSEMBLY_JOIN' && toChannelPubKey == this.channel.getChannelPubKey(channel) ){
+          this.timeAssembly[channel][path]['requests'].push(message);
+
            broadcastLock = true;
             //we know the time now?
             let timeQuorumResolved = false;
