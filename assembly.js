@@ -126,7 +126,7 @@ export class AssemblyManager {
               for(let e of this.timeAssembly[channel][path]['requests']){
 
 
-                
+
                 //compare times and group different times
                 timeQuorumResolved = false;
 
@@ -200,11 +200,13 @@ export class AssemblyManager {
                   let quorumResolved = false;
                   for(let e of this.timeAssembly[channel][path]['requests']){
                     //compare data and group different data
+                    timeQuorumResolved = false;
+
+                    this.responseAssembly[channel][path]['resolved'].push(e);
+                    this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_ACCEPTED", time: acceptedTime })
                   }
 
                   if(quorumResolved){
-                    this.responseAssembly[channel][path]['resolved'].push(e);
-                    this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_ACCEPTED", time: acceptedTime })
                     timeQuorumResolved = true;
                     setTimeout( () => {
                       this.podAskSub[channel][path].unsubscribe();
