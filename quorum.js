@@ -40,5 +40,12 @@ export class QuestQuorum {
   }
 
 
+  async get(path, config = { consensus: 'default' }){
+    //see if it's possible to request from an existing quorum
+    this.assembly.create(path)
+  }
+
+
+
 
 }
