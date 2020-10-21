@@ -200,14 +200,14 @@ export class AssemblyManager {
                   let quorumResolved = false;
                   for(let e of this.timeAssembly[channel][path]['requests']){
                     //compare data and group different data
-                    timeQuorumResolved = false;
+                    quorumResolved = false;
 
                     this.responseAssembly[channel][path]['resolved'].push(e);
                     this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_ACCEPTED", time: acceptedTime })
                   }
 
                   if(quorumResolved){
-                    timeQuorumResolved = true;
+                    quorumResolved = true;
                     setTimeout( () => {
                       this.podAskSub[channel][path].unsubscribe();
                     },5000);
