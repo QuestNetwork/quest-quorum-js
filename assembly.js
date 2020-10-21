@@ -15,6 +15,8 @@ export class AssemblyManager {
       this.dev = false;
       this.stopwatch = 0;
       this.timeAssembly = {};
+      this.podSub = {}
+
     }
 
     async start(config){
@@ -33,67 +35,7 @@ export class AssemblyManager {
       return true;
     }
 
-    async create(path, config = {} ){
-      this.stopwatch = new Date().getTime();
-      //join a path
 
-      this.publishCreate(path);
-
-      let timeQuorumResolved = false;
-      let i = 0;
-      while(!timeQuorumResolved && i<(120000/5000)){
-        if(!(typeof config['channel'] == 'undefined' && this.timeAssembly[path].length < 6) && !(typeof config['channel'] != 'undefined' && this.timeAssembly[path].length < (this.dolphin.getOnlineParticipants(config['channel'].length/4*3)))){
-
-          //we know the time now?
-
-          for(let e of this.timeAssembly[path]){
-            //compare times and group different times
-          }
-
-          if(e == 1){
-            timeQuorumResolved = true;
-          }
-
-        }
-
-        await this.utilities.delay(5000);
-        i++;
-      }
-
-      if(!timeQuorumResolved){
-        throw('time');
-      }
-
-      this.ask(path, time);
-
-      let quorumResolved = false;
-      let winner = {};
-
-      i = 0;
-      while(!timeQuorumResolved && i<(120000/5000)){
-        if(!(typeof config['channel'] == 'undefined' && this.quorumResults[path].length < 6) && !(typeof config['channel'] != 'undefined' && this.quorumResults[path].length < (this.dolphin.getOnlineParticipants(config['channel'].length/4*3)))){
-
-          //we know the time now?
-
-          for(let e of this.quorumResults[path]){
-            //compare times and group different times
-          }
-
-          if(e == 1){
-            quorumResolved = true;
-            winner = {};
-          }
-
-        }
-
-        await this.utilities.delay(5000);
-        i++;
-      }
-
-
-      return { resolved: quorumResolved, result: winner }
-      //don't terminate until result is known or timeout
-    }
 
     resolveChannelsFromPath(path){
       let channels = [];
@@ -103,22 +45,96 @@ export class AssemblyManager {
       return channels;
     }
 
-    publishCreate(){
+    async ask(path, config = {} ){
+      this.stopwatch = new Date().getTime();
+      //join a path
+      let assembly = await this.publishCreate(path);
 
-      let channels = this.resolveChannelsFromPath(path);
+      let results = this.publishAsk(assembly,path);
 
-      for(let channel of channels){
-        //listen for QUORUM_ASSEMBLY_JOIN on our path
-        //call addPeer for valid contenders
-
-        this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_CREATE" })
-        //create the new assemblu
+      if(results.length > 0){
+        return { resolved: true, result: results[0], results: results }
       }
+      else{
+        return { resolved: false }
+      }
+      //don't terminate until result is known or timeout
+    }
 
+
+    publishCreate(path){
+      return new Promise( async(resolve) => {
+            let channels = this.resolveChannelsFromPath(path);
+            let peers = [];
+            for(let channel of channels){
+              if(typeof this.timeAssembly[channel] == 'undefined'){
+                this.timeAssembly[channel] = {};
+              }
+              if(typeof this.timeAssembly[channel][path] == 'undefined'){
+                this.timeAssembly[channel][path] = [];
+              }
+              this.timeAssembly[channel][path] = await this.broadcastCreate(channel,path)
+              resolve(this.timeAssembly[channel][path]);
+              //create the new assemblu
+            }
+
+            setTimeout( () => {
+                resolve('abort');
+            },240000)
+
+        });
 
     }
 
-    async ask(path, time){
+
+    broadcastCreate(channel,path){
+      return new Promise( (resolve) => {
+
+      if(typeof this.timeAssembly[channel][path]['requests'] == 'undefined'){
+        this.timeAssembly[channel][path]['requests'] = [];
+      }
+
+      let broadcastLock = false;
+
+      if(typeof  this.podSub[channel] == 'undefined'){
+        this.podSub[channel] = {};
+      }
+
+      this.podSub[channel][path] = this.dolphin.pod.listen(channel).subscribe( (message) => {
+
+        if(message['type'] == 'QUORUM_ASSEMBLY_JOIN' && toChannelPubKey == this.channel.getChannelPubKey(channel)  && this.timeAssembly[channel][path]['requests'].length < (this.dolphin.getOnlineParticipants(channel.length/4*3)){
+         this.timeAssembly[channel][path]['requests'].push(message);
+        }
+        else if(!broadcastLock && message['type'] == 'QUORUM_ASSEMBLY_JOIN' && toChannelPubKey == this.channel.getChannelPubKey(channel) ){
+           broadcastLock = true;
+            //we know the time now?
+            let timeQuorumResolved = false;
+            for(let e of this.timeAssembly[channel][path]['requests']){
+              //compare times and group different times
+              if(timeQuorumResolved){
+                this.timeAssembly[channel][path]['resolved'].push(e);
+                this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_ACCEPTED" })
+                timeQuorumResolved = true;
+                setTimeout( () => {
+                  this.podSub[channel][path].unsubscribe();
+                },5000);
+                resolve(this.timeAssembly[channel][path]['resolved']);
+              }
+            }
+        }
+      });
+
+      this.dolphin.publish({ channel: channel, type: "QUORUM_ASSEMBLY_CREATE" })
+
+      setTimeout( () => {
+        resolve('abort');
+      },120000);
+    });
+  }
+
+
+//TODO::::
+    async publishAsk(assembly, time){
       //resolve channels from path
       let channels = this.resolveChannelsFromPath(path);
 
